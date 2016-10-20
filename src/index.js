@@ -1,66 +1,25 @@
-const express = require('express');
-
+require('dotenv').config();
+const fs = require('fs');
 const MongoClient = require('mongodb').MongoClient;
+const MQTT = require('mqtt');
+const app = require('./app.js');
 
-const url = 'mongodb://localhost:27017/paradise-firebase';
-
-const set = (key, value, _hasChild) => {
-  const keyParts = key.split('/');
-  const _key = keyParts.slice(0, -1).join('/');
-  const _value = keyParts.slice(-1)[0];
-  const _isChild = keyParts.length > 2;
-  console.log(_key, _value, _hasChild);
-
-  const collection = db.collection(_key);
-
-  if (value === null) {
-    return collection.deleteMany({ _key: _value });
-  }
-
-  return collection.findOne({ _key: _value })
-  .then(doc => {
-    const entry = {
-      _key: _value,
-      _value: value,
-      _isChild,
-      _hasChild: _hasChild ? _hasChild : false
-    };
-    if (doc) {
-      return collection.updateOne({ _key: _value }, { $set: entry })
-      .then(() => _isChild && set(_key, _value, true));
-    } else {
-      return collection.insertOne(entry)
-      .then(() => _isChild && set(_key, null, true));
-    }
-  });
-}
-
-const get = (key) => {
-  const [_key, _value] = key.split('/');
-  const collection = db.collection(_key);
-
-  return collection.findOne({ _key: _value })
-  .then(doc => {
-    if (doc === null) return null;
-    switch (typeof doc) {
-      case 'object':
-        return doc._value;
-      default:
-        return doc;
-    }
-  });
-}
-
-const initialize = () => {
-  // get('users/153').then(res => console.log(res));
-  //set('users/123', false);
-  //get('users/123').then(res => console.log(res))
-  set('users/123/name', 'Raymi');
-}
-
-let db;
-MongoClient.connect(url, (err, connection) => {
+MongoClient.connect(process.env.DB_HOST, (err, db) => {
   if (err) return console.error(err);
-  db = connection;
-  initialize();
+  db.admin().authenticate(process.env.DB_USER, process.env.DB_PASS);
+  console.log('Connected to DB');
+
+  const mqttClient = MQTT.connect(process.env.MQTT_HOST, {
+    cert: fs.readFileSync('ca.crt'),
+    rejectUnauthorized: false
+  })
+
+  mqttClient.on('error', (err) => console.error(err))
+
+  mqttClient.on('connect', () => {
+    console.log('Connected to MQTT');
+
+    // Start our application
+    app({ db, mqtt: mqttClient });
+  });
 });
