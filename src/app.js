@@ -21,11 +21,13 @@ module.exports = config => {
 
   mqtt.subscribe('paradise/#');
   mqtt.on('message', (topic, payload) => {
+    console.log('Message', topic, payload.toString());
     let data;
 
     if (topic.startsWith('paradise/log')) {
       try { data = JSON.parse(payload.toString()); }
       catch (err) { data = {}; }
+      if (typeof data !== 'object') data = {};
       data._arrivedAt = new Date();
       data._service = topic.substring('paradise/log/'.length);
       data._value = payload.toString();
