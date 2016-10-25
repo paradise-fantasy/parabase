@@ -1,7 +1,11 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
+
+app.use(cors());
+
+const server = app.listen(process.env.PORT, () => console.log('App is ready!'));
+const io = require('socket.io').listen(server);
 
 const parseQuery = (rawQuery) => {
   const query = {
@@ -10,7 +14,18 @@ const parseQuery = (rawQuery) => {
   };
 
   if (typeof rawQuery.limit !== "undefined") {
-    query.limit = rawQuery.limit < 0 ? null : rawQuery.limit; // limit is null if negative limit specified
+    query.limit = parseInt(rawQuery.limit) < 0 ? null : parseInt(rawQuery.limit); // limit is null if negative limit specified
+  }
+
+  if (typeof rawQuery.sort !== "undefined") {
+    query.sort = [];
+    const sortings = Array.isArray(rawQuery.sort) ? rawQuery.sort.slice(0) : [rawQuery.sort];
+    sortings.forEach(sorting => {
+      const order = sorting.startsWith('-') ? -1 : 1;
+      const collection = order === -1 ? sorting.substr(1) : sorting;
+      query.sort.push([collection, order]);
+    });
+    console.log(query.sort);
   }
 
   return query;
@@ -32,6 +47,7 @@ module.exports = config => {
       data._service = topic.substring('paradise/log/'.length);
       data._value = payload.toString();
       db.collection('log').insert(data).catch(err => console.error(err));
+      console.log('Emitting log data', data);
       io.emit('log', data);
     }
 
@@ -66,7 +82,5 @@ module.exports = config => {
     findDocuments(collection, limit, sort)
       .then(results => res.json(results))
       .catch(err => res.status(500).json(err));
-  })
-
-  app.listen(3000, () => console.log('App is ready!'));
+  });
 }
