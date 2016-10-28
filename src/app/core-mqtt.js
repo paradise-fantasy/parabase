@@ -1,6 +1,7 @@
 const mqtt = require('../mqtt').client.mqtt;
 const db = require('../db').client.db;
 const io = require('./index').io;
+const isJSON = require('../msc/utils').isJSON;
 
 const handleLogMessage = (service, payload) => {
   const data = {
@@ -14,6 +15,8 @@ const handleLogMessage = (service, payload) => {
 };
 
 const handleApiMessage = (service, payload) => {
+  if (isJSON(payload)) payload = JSON.parse(payload);
+
   const data = {
     _arrivedAt: new Date(),
     _service: service,

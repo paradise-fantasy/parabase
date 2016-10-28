@@ -19,8 +19,15 @@ const parseQuery = (rawQuery) => {
   }
 
   return query;
-}
+};
+
+const isJSON = (string) => {
+  try { JSON.parse(string); }
+  catch (e) { return false; }
+  return true;
+};
 
 module.exports = {
-  parseQuery
+  parseQuery,
+  isJSON
 };
