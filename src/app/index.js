@@ -18,6 +18,7 @@ const setup = () => new Promise((resolve, reject) => {
 const start = () => {
   require('./core-mqtt');
   require('./core-api');
+  require('./spotify-api');
 }
 
 module.exports = {
