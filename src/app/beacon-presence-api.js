@@ -77,11 +77,11 @@ const checkForTimeouts = () => {
       isChanged = true;
       person.position = AWAY;
       logChangeEvent(person.name, AWAY);
+      console.log(`${person.name} was timed out`);
     }
   });
 
   if (isChanged) {
-    console.log('Timeouts did occur');
     notifyUpdate();
   }
   console.log('Check complete \n');
