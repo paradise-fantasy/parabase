@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 const app = express();
 
 /**
@@ -8,6 +9,7 @@ const app = express();
  */
 const setup = () => new Promise((resolve, reject) => {
   app.use(cors());
+  app.use(bodyParser.json());
   const server = app.listen(process.env.PORT, () => {
     module.exports.io = require('socket.io').listen(server);
     console.log('Server setup, listening to port:', process.env.PORT);
@@ -19,6 +21,7 @@ const start = () => {
   require('./core-mqtt');
   require('./core-api');
   require('./spotify-api');
+  require('./beacon-presence-api');
 }
 
 module.exports = {
