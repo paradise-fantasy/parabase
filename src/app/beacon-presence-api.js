@@ -69,7 +69,7 @@ app.post('/beacon-presence/ping', (req, res) => {
 });
 
 const checkForTimeouts = () => {
-  console.log('\n Checking for timeouts');
+  console.log('\nChecking for timeouts');
   let isChanged = false;
 
   presence.forEach(person => {
